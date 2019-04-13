@@ -20,7 +20,7 @@ class FriendlyErrorMessagesMixin(FieldMap):
     @property
     def errors(self):
         ugly_errors = super(FriendlyErrorMessagesMixin, self).errors
-        pretty_errors = self.build_pretty_errors(ugly_errors)
+        pretty_errors = self.build_pretty_errors(ugly_errors, self.fields)
         return ReturnDict(pretty_errors, serializer=self)
 
     def register_error(self, error_message, field_name=None,
@@ -194,17 +194,25 @@ class FriendlyErrorMessagesMixin(FieldMap):
     def get_non_field_error_entries(self, errors):
         return [self.get_non_field_error_entry(error) for error in errors]
 
-    def build_pretty_errors(self, errors):
+    def build_pretty_errors(self, errors, fields):
         pretty = []
         for error_type in errors:
             if error_type == 'non_field_errors':
                 pretty.extend(self.get_non_field_error_entries(
                     errors[error_type]))
             else:
-                field = self.fields[error_type]
-                pretty.extend(
-                    self.get_field_error_entries(errors[error_type], field),
-                )
+                field = fields[error_type]
+                if hasattr(field, 'fields'):
+                    pretty.append({
+                        'field': 'client',
+                        'errors': self.build_pretty_errors(
+                            errors[error_type],
+                            fields[error_type].fields)['errors']
+                    })
+                else:
+                    pretty.extend(
+                        self.get_field_error_entries(errors[error_type], field)
+                    )
         if pretty:
             return {'code': settings.VALIDATION_FAILED_CODE,
                     'message': settings.VALIDATION_FAILED_MESSAGE,
