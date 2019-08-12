@@ -203,7 +203,7 @@ class FriendlyErrorMessagesMixin(FieldMap):
                     data))
             else:
                 field = fields[error_type]
-                if hasattr(field, 'fields'):
+                if hasattr(field, 'fields') and error_type in data:
                     pretty.append({
                         'field': 'client',
                         'errors': self.build_pretty_errors(
