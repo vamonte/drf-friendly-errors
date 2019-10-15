@@ -211,6 +211,17 @@ class FriendlyErrorMessagesMixin(FieldMap):
                             fields[error_type].fields,
                             data[error_type])['errors'],
                     })
+                elif hasattr(field, 'child') and error_type in data:
+                    pretty.append({
+                        'field': error_type,
+                        'errors': [
+                            self.build_pretty_errors(
+                                e,
+                                field.child.fields.fields,
+                                data[error_type][i])['errors']
+                            for i, e in enumerate(errors[error_type])
+                        ],
+                    })
                 else:
                     pretty.extend(
                         self.get_field_error_entries(errors[error_type], field,
