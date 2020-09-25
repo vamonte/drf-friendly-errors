@@ -134,8 +134,11 @@ class FriendlyErrorMessagesMixin(FieldMap):
         return None
 
     def _run_validator(self, validator, field, message, data):
+        validator_args = [data[field.field_name]]
+        if getattr(validator, 'requires_context', False):
+            validator_args.append(field)
         try:
-            validator(data[field.field_name])
+            validator(*validator_args)
         except (DjangoValidationError, RestValidationError) as err:
             err_message = err.detail[0] \
                 if hasattr(err, 'detail') else err.message
